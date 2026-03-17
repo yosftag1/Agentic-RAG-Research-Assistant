@@ -487,8 +487,28 @@ async def health():
         "llm_provider": settings.llm_provider,
         "embedding_provider": settings.embedding_provider,
         "search_strategy": settings.search_strategy,
-        "settings": settings.model_dump(),
         "stats": stats
+    }
+
+
+@app.get("/debug-settings")
+async def debug_settings():
+    """Debug endpoint to verify settings are loaded (without exposing secrets)."""
+    settings = get_settings()
+    import os
+    
+    return {
+        "llm_provider": settings.llm_provider,
+        "embedding_provider": settings.embedding_provider,
+        "llm_model": settings.llm_model,
+        "embedding_model": settings.embedding_model,
+        "google_api_key_set": bool(settings.google_api_key),
+        "google_api_key_length": len(settings.google_api_key) if settings.google_api_key else 0,
+        "google_api_key_preview": (
+            settings.google_api_key[:20] + "..." if len(settings.google_api_key) > 20 else "***"
+        ) if settings.google_api_key else "NOT SET",
+        "environment_var_google_api_key": "set" if os.environ.get("GOOGLE_API_KEY") else "not set",
+        "environment_var_gemini_api_key": "set" if os.environ.get("GEMINI_API_KEY") else "not set",
     }
 
 

@@ -5,11 +5,14 @@ All settings are loaded from environment variables or a .env file.
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from functools import lru_cache
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
@@ -19,6 +22,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        case_sensitive=False,
     )
 
     llm_provider: str = "gemini"
@@ -60,6 +64,13 @@ class Settings(BaseSettings):
         self.openai_api_key = self.openai_api_key.strip().strip('"').strip("'")
         self.llm_provider = self.llm_provider.strip().lower()
         self.embedding_provider = self.embedding_provider.strip().lower()
+        
+        # Startup validation log (without exposing actual key)
+        key_status = "set" if self.google_api_key else "NOT SET"
+        logger.info(
+            f"Settings loaded: provider={self.llm_provider}, "
+            f"google_api_key={key_status}, llm_model={self.llm_model}"
+        )
 
 
 @lru_cache
