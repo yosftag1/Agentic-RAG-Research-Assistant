@@ -1,0 +1,402 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  
+  <title>Research Assistant — Multi-Agent RAG System</title>
+  <meta name="description" content="Personal research assistant powered by a multi-agent RAG system. Ingest papers, ask questions, get cited answers.">
+
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" crossorigin="anonymous">
+
+  
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  
+
+  <div class="app-container">
+
+    
+    <header class="header">
+      <div class="header-logo">
+        <span class="logo-icon">RA</span>
+        <h1>Research Assistant</h1>
+      </div>
+
+      <div class="header-actions">
+        <button class="btn btn-icon" id="about-toggle" title="About" type="button">
+          <span class="btn-glyph">ℹ️</span>
+          <span>About</span>
+        </button>
+        <button class="btn btn-icon" id="web-search-toggle" title="Search Papers" type="button">
+          <span class="btn-glyph">🔎</span>
+          <span>Search</span>
+        </button>
+        <button class="btn btn-icon" id="settings-toggle" title="Settings" type="button">
+          <span class="btn-glyph">⚙️</span>
+          <span>Settings</span>
+        </button>
+        <button class="btn btn-icon" id="clear-chat-btn" title="Clear conversation" type="button">
+          <span class="btn-glyph">🗑️</span>
+          <span>Clear</span>
+        </button>
+      </div>
+    </header>
+
+    
+    <div class="app-body">
+
+      
+      <aside class="sidebar" id="sidebar">
+
+        
+        <div class="sidebar-section">
+          <h3>Knowledge Base</h3>
+          
+          <ul class="doc-list" id="doc-list">
+            
+          </ul>
+
+          
+          <div class="upload-area" id="upload-area">
+            <span class="upload-icon">Upload</span>
+            <span class="upload-text">Drop files here or click to upload</span>
+            <span class="upload-hint">PDF, TXT, MD files supported</span>
+          </div>
+          
+          <input type="file" id="file-input" accept=".pdf,.txt,.md" multiple hidden>
+        </div>
+
+        
+        <div class="sidebar-section">
+          <h3>System Flow</h3>
+          <div class="arch-flow">
+            <div class="arch-stage arch-user">
+              <div class="arch-stage-title">1) Query Intake</div>
+              <div class="arch-stage-desc">Understand user intent and preserve conversation context.</div>
+            </div>
+            <div class="arch-arrow-down">↓</div>
+            <div class="arch-stage arch-orchestrator">
+              <div class="arch-stage-title">2) Orchestration</div>
+              <div class="arch-stage-desc">Route work to retrieval, summarization, analysis, and drafting.</div>
+            </div>
+            <div class="arch-routes">
+              <div class="arch-route-label">Specialist agents</div>
+              <div class="arch-agents-grid">
+                <div class="arch-agent-item">
+                  <span class="arch-agent-node">Retriever</span>
+                  <span class="arch-agent-targets">Local index first, web fallback when needed</span>
+                </div>
+                <div class="arch-agent-item">
+                  <span class="arch-agent-node">Summarizer</span>
+                  <span class="arch-agent-targets">Condenses source material into focused takeaways</span>
+                </div>
+                <div class="arch-agent-item">
+                  <span class="arch-agent-node">Analyst</span>
+                  <span class="arch-agent-targets">Highlights evidence, trade-offs, and disagreements</span>
+                </div>
+                <div class="arch-agent-item">
+                  <span class="arch-agent-node">Writer</span>
+                  <span class="arch-agent-targets">Builds a clear, cited final response</span>
+                </div>
+              </div>
+            </div>
+            <div class="arch-arrow-down">↓</div>
+            <div class="arch-stage arch-output">
+              <div class="arch-stage-title">3) Cited Output</div>
+              <div class="arch-stage-desc">Returns answer, sources, and detailed pipeline reasoning.</div>
+            </div>
+          </div>
+        </div>
+
+        
+        <div class="sidebar-section">
+          <h3>Stats</h3>
+          <div style="font-size: 0.82rem; color: var(--text-secondary);">
+            <p>Chunks indexed: <strong id="chunk-count">-</strong></p>
+            <p>Model: <strong id="model-name">-</strong></p>
+          </div>
+        </div>
+      </aside>
+
+      
+      
+      <div id="resize-handle" class="resize-handle" title="Drag to resize"></div>
+
+      
+      <main class="chat-container">
+
+        
+        <div class="chat-messages" id="chat-messages">
+
+          
+          <div class="welcome-screen" id="welcome-screen">
+            <span class="welcome-icon">RA</span>
+            <h2>Research Assistant</h2>
+            <p>
+              A multi-agent research workspace powered by pluggable LLM and embedding providers.
+              Ingest your sources, ask deep questions, and get transparent answers with citations.
+            </p>
+
+            
+            <div class="suggestions">
+              <button class="suggestion-chip" onclick="useSuggestion(this)">
+                What are the key findings on attention mechanisms?
+              </button>
+              <button class="suggestion-chip" onclick="useSuggestion(this)">
+                Summarize the main contributions of this paper
+              </button>
+              <button class="suggestion-chip" onclick="useSuggestion(this)">
+                Compare transformer and RNN architectures
+              </button>
+              <button class="suggestion-chip" onclick="useSuggestion(this)">
+                Write research notes on self-supervised learning
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        
+        <div class="input-container">
+          <div class="input-wrapper">
+            
+            <textarea 
+              id="query-input"
+              placeholder="Ask a research question..."
+              rows="1"
+              autofocus
+            ></textarea>
+            <button class="send-button" id="send-btn" title="Send message">
+              
+              ➜
+            </button>
+          </div>
+          <div class="input-hint input-hint-row">
+            <span>Press Enter to send · Shift+Enter for new line</span>
+            <label class="source-pref-inline" for="source-preference">
+              Source Preference:
+              <select id="source-preference" class="settings-select source-pref-select">
+                <option value="auto" selected>Auto</option>
+                <option value="local">Prefer Local Files</option>
+                <option value="web">Prefer Web Pages</option>
+                <option value="papers">Prefer Papers</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  
+  
+  <div class="toast-container" id="toast-container"></div>
+
+  
+  
+  <div class="modal-overlay" id="upload-modal">
+    <div class="modal">
+      <h3>⬆️ Uploading Document</h3>
+      <p id="upload-filename"></p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="upload-progress"></div>
+      </div>
+      <p id="upload-status" style="font-size: 0.85rem; color: var(--text-secondary);"></p>
+    </div>
+  </div>
+
+  
+  <div class="modal-overlay" id="web-search-modal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h3>Search Google Scholar</h3>
+        <button class="btn close-btn" id="web-search-close">✕</button>
+      </div>
+
+      <div class="web-search-input-group">
+        <input type="text" id="web-search-query" class="settings-select" placeholder="Enter topic, keywords, or paper title..." style="flex: 1;" />
+        <button class="btn btn-primary" id="web-search-btn">Search</button>
+      </div>
+
+      
+      <div id="web-search-sort-bar" class="web-search-sort-bar" style="display:none;">
+        <span class="sort-bar-label">Sort:</span>
+        <button class="sort-btn active" data-sort="citations" onclick="setModalSort('citations')">Most Cited</button>
+        <button class="sort-btn" data-sort="date" onclick="setModalSort('date')">🗓️ Most Recent</button>
+        <button class="sort-btn" data-sort="venue" onclick="setModalSort('venue')">🎓 Reputable Venues</button>
+      </div>
+
+      <div id="web-search-results" class="web-search-results-area">
+        
+        <p class="search-placeholder">Enter a query to search for academic papers. You can select relevant papers to ingest into your Knowledge Base.</p>
+      </div>
+
+      <div class="modal-actions" style="justify-content: space-between; align-items: center;">
+        <span id="web-search-status" class="setting-hint" style="margin: 0;"></span>
+        <button class="btn btn-success" id="web-search-ingest-btn" disabled>Ingest Selected (0)</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal modal-settings">
+      <div class="modal-header">
+        <h3>System Settings</h3>
+        <button class="btn close-btn" id="settings-close">✕</button>
+      </div>
+
+      <div class="settings-group">
+        <label for="setting-llm">LLM Provider</label>
+        <select id="setting-llm" class="settings-select">
+          <option value="gemini">Gemini</option>
+          <option value="openai">OpenAI</option>
+          <option value="ollama">Ollama (Local)</option>
+        </select>
+        <span class="setting-hint">Provider for reasoning agents</span>
+      </div>
+
+      <div class="settings-group">
+        <label for="setting-embedding">Embedding Provider</label>
+        <select id="setting-embedding" class="settings-select">
+          <option value="gemini">Gemini</option>
+          <option value="openai">OpenAI</option>
+          <option value="ollama">Ollama (Local)</option>
+        </select>
+        <span class="setting-hint">Provider for vector embeddings</span>
+      </div>
+
+      <div class="settings-group">
+        <label for="setting-search">Search Strategy</label>
+        <select id="setting-search" class="settings-select">
+          <option value="semantic">Semantic (ChromaDB)</option>
+          <option value="hybrid">Hybrid (ChromaDB + BM25)</option>
+          <option value="mmr">MMR (Max Marginal Relevance)</option>
+        </select>
+        <span class="setting-hint">How to retrieve chunks</span>
+      </div>
+
+      <div class="settings-group">
+        <label for="setting-source-preference">Source Preference</label>
+        <select id="setting-source-preference" class="settings-select">
+          <option value="auto" selected>Auto (recommended)</option>
+          <option value="local">Prefer Local Files</option>
+          <option value="web">Prefer Web Pages</option>
+          <option value="papers">Prefer Papers</option>
+        </select>
+        <span class="setting-hint">Bias retrieval toward your preferred source while still allowing automatic routing.</span>
+      </div>
+
+      <div class="settings-group">
+        <label>Reset Knowledge Base</label>
+        <button id="reset-collection-btn" class="btn btn-danger">Reset Collection</button>
+        <span class="setting-hint">Clears all indexed vectors. Required when switching embedding models. Documents must be re-ingested afterwards.</span>
+      </div>
+
+      <div class="settings-group">
+        <label for="setting-openai-key">OpenAI API Key (Optional)</label>
+        <input type="password" id="setting-openai-key" class="settings-select" placeholder="sk-..." />
+        <span class="setting-hint">Required if using OpenAI models</span>
+      </div>
+
+      <div class="settings-group">
+        <label for="setting-gemini-key">Gemini API Key (Optional)</label>
+        <input type="password" id="setting-gemini-key" class="settings-select" placeholder="AIza..." />
+        <span class="setting-hint">Required if using Gemini models</span>
+      </div>
+
+      <div class="settings-group">
+        <label for="setting-ollama-url">Ollama Base URL (Optional)</label>
+        <div style="display: flex; gap: 8px;">
+            <input type="text" id="setting-ollama-url" class="settings-select" placeholder="http://localhost:11434" style="flex: 1;"/>
+            <button id="refresh-ollama-models" class="btn btn-secondary">Test Connection</button>
+        </div>
+        <span class="setting-hint">Required if using local Ollama models</span>
+      </div>
+
+      <div class="settings-group model-select-setting" style="display: none;">
+        <label for="setting-llm-model">Chat Model</label>
+        <select id="setting-llm-model" class="settings-select">
+          <option value="">Fetch models first...</option>
+        </select>
+        <span class="setting-hint">Select a chat model for agent reasoning</span>
+      </div>
+
+      <div class="settings-group model-select-setting" style="display: none;">
+        <label for="setting-embedding-model">Embedding Model</label>
+        <select id="setting-embedding-model" class="settings-select">
+          <option value="">Fetch models first...</option>
+        </select>
+        <span class="setting-hint">Select an embedding model for indexing. For Ollama, use `nomic-embed-text` by default or `mxbai-embed-large` as an alternative.</span>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-primary" id="settings-saveBtn">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="about-modal">
+    <div class="modal modal-about">
+      <div class="modal-header">
+        <h3>About This Assistant</h3>
+        <button class="btn close-btn" id="about-close">✕</button>
+      </div>
+
+      <div class="about-content">
+        <p>This system is a multi-agent retrieval-augmented research assistant built for iterative evidence-based work.</p>
+
+        <h4>How It Works</h4>
+        <ul>
+          <li><strong>Orchestrator:</strong> classifies your request and decides which agents to run.</li>
+          <li><strong>Retriever:</strong> searches your knowledge base first and expands to web sources only when local context is not enough.</li>
+          <li><strong>Summarizer / Analyst / Writer:</strong> synthesize findings, compare evidence, and draft structured responses.</li>
+          <li><strong>Merge step:</strong> produces the final answer with source-backed citations.</li>
+        </ul>
+
+        <h4>Model Flexibility</h4>
+        <p>You can switch between providers (Gemini, OpenAI, Ollama). Embedding changes automatically reset stale vectors so the index stays consistent.</p>
+        <p>If you use Ollama from a remote or hosted environment, you may need a tunnel (for example, ngrok) so this app can reach your local Ollama endpoint.</p>
+
+        <h4>Transparency</h4>
+        <p>The live run panel shows what each agent is doing, and the pipeline panel exposes detailed step-by-step reasoning metadata.</p>
+
+        <h4>Created By</h4>
+        <div class="about-attribution">
+          <a href="mailto:yosftag2000@gmail.com">✉️ yosftag2000@gmail.com</a>
+          <a href="https://yosftag1.github.io" target="_blank" rel="noopener noreferrer">🌐 yosftag1.github.io</a>
+          <a href="https://github.com/yosftag1" target="_blank" rel="noopener noreferrer">🐙 github.com/yosftag1</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-badge" id="system-status-badge" aria-live="polite">
+    <span class="status-dot"></span>
+    <span>System Online</span>
+  </div>
+
+  <div class="site-attribution" aria-label="Creator links">
+    <a href="https://yosftag1.github.io" target="_blank" rel="noopener noreferrer">yosftag1.github.io</a>
+    <span>•</span>
+    <a href="https://github.com/yosftag1" target="_blank" rel="noopener noreferrer">github.com/yosftag1</a>
+  </div>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

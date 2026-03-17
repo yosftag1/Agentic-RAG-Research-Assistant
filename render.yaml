@@ -1,0 +1,39 @@
+# ═══════════════════════════════════════════════════════════════════
+# RENDER.YAML — Render Deployment Configuration
+#
+# 📚 WHAT THIS IS:
+#
+# When you connect your GitHub repo to Render, it reads this file
+# to know how to build and run your app. It's like a recipe card:
+#   "Here's what to install, here's how to start it."
+#
+# You can also deploy without this file by manually configuring
+# the settings in Render's web dashboard.
+#
+# Docs: https://render.com/docs/blueprint-spec
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+  - type: web                              # This is a web service (has a URL)
+    name: research-assistant               # Name shown in Render dashboard
+    runtime: python                        # Use Python runtime
+    plan: free                             # Free tier!
+    
+    # Build command — runs once during deployment
+    buildCommand: pip install .
+    
+    # Start command — runs the server
+    startCommand: uvicorn research_assistant.api.server:app --host 0.0.0.0 --port $PORT
+    
+    # Environment variables — set these in Render dashboard too
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: "3.12.0"
+      - key: LLM_MODEL
+        value: "gemini-2.0-flash"
+      - key: CHROMA_PERSIST_DIR
+        value: "/var/data/chroma_db"
+      - key: DOC_REGISTRY_PATH
+        value: "/var/data/doc_registry.db"

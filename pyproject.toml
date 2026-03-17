@@ -1,0 +1,66 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-assistant"
+version = "0.1.0"
+description = "Personal research assistant with RAG and multi-agent architecture"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # LLM & Agent framework
+    "langchain>=0.3.0",
+    "langchain-google-genai>=2.1.0",
+    "langchain-community>=0.3.0",
+    "langgraph>=0.3.0",
+
+    # Embeddings & Vector Store
+    "chromadb>=0.5.0",
+    "rank-bm25>=0.2.2",
+
+    # Document loaders
+    "pypdf>=4.0",
+    "unstructured>=0.15.0",
+
+    # Web search
+    "duckduckgo-search>=6.0",
+    "scholarly>=1.7.0",
+
+    # Config & CLI
+    "pydantic-settings>=2.0",
+    "typer[all]>=0.12.0",
+    "python-dotenv>=1.0",
+
+    # API (optional)
+    "fastapi>=0.115.0",
+    "python-multipart>=0.0.9",
+    "uvicorn>=0.30.0",
+    "aiofiles>=24.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6.0",
+]
+tavily = [
+    "tavily-python>=0.5.0",
+]
+openai = [
+    "langchain-openai>=0.3.0",
+]
+ollama = [
+    "langchain-ollama>=0.3.0",
+]
+
+[project.scripts]
+research-assistant = "research_assistant.main:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
