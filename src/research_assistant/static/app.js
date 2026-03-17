@@ -7,6 +7,7 @@ const chatMessages   = document.getElementById('chat-messages');
 const welcomeScreen  = document.getElementById('welcome-screen');
 const queryInput     = document.getElementById('query-input');
 const sendBtn        = document.getElementById('send-btn');
+const clearPromptBtn = document.getElementById('clear-prompt-btn');
 const clearChatBtn   = document.getElementById('clear-chat-btn');
 const sidebar        = document.getElementById('sidebar');
 const uploadArea     = document.getElementById('upload-area');
@@ -64,6 +65,143 @@ const chatWebSearchResultsMap = {};
 
 
 const API_BASE = '';  // Empty = same origin (works both locally and deployed)
+
+const DEMO_PROMPT = 'Using the indexed papers, when should I choose a transformer over an RNN for sequence modeling, and what trade-offs do the sources highlight?';
+
+const DEMO_MATERIALS = [
+  {
+    type: 'PDF',
+    title: 'Attention Is All You Need',
+    note: 'Core transformer paper used for long-range dependency and parallel training claims.',
+  },
+  {
+    type: 'PDF',
+    title: 'Sequence to Sequence Learning with Neural Networks',
+    note: 'Baseline encoder-decoder framing for recurrent sequence models.',
+  },
+  {
+    type: 'PDF',
+    title: 'Learning Phrase Representations using RNN Encoder-Decoder',
+    note: 'Explains recurrent modeling strengths and practical sequence trade-offs.',
+  },
+];
+
+const DEMO_SOURCES = [
+  { origin: 'Indexed PDF', label: 'Attention Is All You Need', source_type: 'paper' },
+  { origin: 'Indexed PDF', label: 'Sequence to Sequence Learning with Neural Networks', source_type: 'paper' },
+  { origin: 'Indexed PDF', label: 'Learning Phrase Representations using RNN Encoder-Decoder', source_type: 'paper' },
+];
+
+const DEMO_ANSWER_MARKDOWN = `**Recommendation:** choose a transformer when the task depends on long-range context, you can train offline on enough data, and throughput matters. Choose an RNN when the setup is smaller, more sequential, or needs lightweight step-by-step inference.
+
+**What the demo materials show:**
+
+- **Transformers** win when attention over the full sequence is valuable, because they model distant token interactions directly and train in parallel.
+- **RNNs** remain reasonable when sequence state evolves incrementally, latency is tight, or the system needs a simpler recurrent architecture.
+- Across these papers, the main trade-off is **context coverage and training efficiency** versus **sequential simplicity and smaller-footprint inference**.
+
+**Bottom line:** if the workload looks like modern document understanding, translation at scale, or long-context reasoning, the indexed materials support using a transformer. If you are building a constrained or streaming system with modest sequence lengths, an RNN can still be the better engineering choice.`;
+
+
+function getSuggestionChipsHtml() {
+  return `
+    <div class="suggestions">
+      <button class="suggestion-chip" onclick="useSuggestion(this)">
+        What are the key findings on attention mechanisms?
+      </button>
+      <button class="suggestion-chip" onclick="useSuggestion(this)">
+        Summarize the main contributions of this paper
+      </button>
+      <button class="suggestion-chip" onclick="useSuggestion(this)">
+        Compare transformer and RNN architectures
+      </button>
+      <button class="suggestion-chip" onclick="useSuggestion(this)">
+        Write research notes on self-supervised learning
+      </button>
+    </div>
+  `;
+}
+
+
+function getDemoSourcesHtml(sources) {
+  const listItems = sources.map((source, index) => {
+    const label = escapeHtml(source.label || `Source ${index + 1}`);
+    const origin = escapeHtml(source.origin || 'Indexed Source');
+    const sourceType = escapeHtml(source.source_type || 'document');
+
+    return `
+      <li>
+        <span class="source-origin">${origin}</span>
+        <span>${label}</span>
+        <span class="source-kind">${sourceType}</span>
+      </li>
+    `;
+  }).join('');
+
+  return `
+    <div class="assistant-sources">
+      <div class="assistant-sources-title">Sources Used</div>
+      <ul class="assistant-sources-list">${listItems}</ul>
+    </div>
+  `;
+}
+
+
+function getWelcomeScreenHtml(showDemo = true) {
+  if (!showDemo) {
+    return `
+      <span class="welcome-icon">RA</span>
+      <h2>Research Assistant</h2>
+      <p>
+        Ingest your own PDFs, notes, or web material, then ask questions and get cited answers from the multi-agent workflow.
+      </p>
+      ${getSuggestionChipsHtml()}
+    `;
+  }
+
+  const materialCards = DEMO_MATERIALS.map((material) => `
+    <div class="welcome-demo-material-card">
+      <div class="welcome-demo-material-type">${escapeHtml(material.type)}</div>
+      <div class="welcome-demo-material-title">${escapeHtml(material.title)}</div>
+      <div class="welcome-demo-material-note">${escapeHtml(material.note)}</div>
+    </div>
+  `).join('');
+
+  return `
+    <span class="welcome-icon">RA</span>
+    <h2>Research Assistant</h2>
+    <p>
+      Demo mode shows what the system looks like after source material has been indexed and a cited answer has already been produced.
+    </p>
+    <div class="welcome-demo-panel">
+      <div class="welcome-demo-header">
+        <span class="welcome-demo-tag">Demo Mode</span>
+        <div class="welcome-demo-actions">
+          <button class="welcome-demo-action" type="button" onclick="setDemoPrompt()">Use in composer</button>
+          <button class="welcome-demo-action" type="button" onclick="clearDemoMode()">Clear demo</button>
+        </div>
+      </div>
+      <div class="welcome-demo-section-label">Example Indexed Materials</div>
+      <div class="welcome-demo-materials">${materialCards}</div>
+      <div class="welcome-demo-chat">
+        <div class="message user-message welcome-demo-message">
+          <div class="message-avatar">You</div>
+          <div class="message-content">
+            <div class="message-bubble">${escapeHtml(DEMO_PROMPT)}</div>
+          </div>
+        </div>
+        <div class="message assistant-message welcome-demo-message">
+          <div class="message-avatar">RA</div>
+          <div class="message-content">
+            <div class="message-bubble">${renderMarkdown(DEMO_ANSWER_MARKDOWN)}</div>
+            ${getDemoSourcesHtml(DEMO_SOURCES)}
+          </div>
+        </div>
+      </div>
+    </div>
+    ${getSuggestionChipsHtml()}
+  `;
+}
 
 
 
@@ -346,6 +484,76 @@ function scrollToBottom() {
 }
 
 
+function renderWelcomeScreen(showDemo = true) {
+  chatMessages.innerHTML = '';
+
+  const welcome = document.createElement('div');
+  welcome.className = 'welcome-screen';
+  welcome.id = 'welcome-screen';
+  if (!showDemo) {
+    welcome.classList.add('welcome-screen-blank');
+  }
+  welcome.innerHTML = getWelcomeScreenHtml(showDemo);
+
+  chatMessages.appendChild(welcome);
+}
+
+
+function renderDemoConversation() {
+  chatMessages.innerHTML = '';
+  conversationHistory = [];
+  
+  // Render user message
+  const userMsg = document.createElement('div');
+  userMsg.className = 'message user-message';
+  userMsg.innerHTML = `
+    <div class="message-avatar">You</div>
+    <div class="message-content">
+      <div class="message-bubble">${escapeHtml(DEMO_PROMPT)}</div>
+    </div>
+  `;
+  chatMessages.appendChild(userMsg);
+  
+  // Render assistant message with sources
+  const assistantMsg = document.createElement('div');
+  assistantMsg.className = 'message assistant-message';
+  const renderedAnswer = renderMarkdown(DEMO_ANSWER_MARKDOWN);
+  assistantMsg.innerHTML = `
+    <div class="message-avatar">RA</div>
+    <div class="message-content">
+      <div class="message-bubble">${renderedAnswer}</div>
+      ${getDemoSourcesHtml(DEMO_SOURCES)}
+    </div>
+  `;
+  chatMessages.appendChild(assistantMsg);
+  
+  scrollToBottom();
+}
+
+
+function updatePromptControls() {
+  if (!clearPromptBtn) return;
+  clearPromptBtn.classList.toggle('is-hidden', !queryInput.value.trim());
+}
+
+
+function clearDemoMode() {
+  renderWelcomeScreen(false);
+  conversationHistory = [];
+  clearPromptInput();
+}
+
+window.clearDemoMode = clearDemoMode;
+
+
+function clearPromptInput() {
+  queryInput.value = '';
+  autoResizeTextarea();
+  updatePromptControls();
+  queryInput.focus();
+}
+
+
 
 
 
@@ -359,6 +567,7 @@ async function sendQuery(questionText) {
 
   queryInput.value = '';
   queryInput.style.height = 'auto';
+  updatePromptControls();
   const thinkingEl = showThinking();
 
   try {
@@ -1158,6 +1367,7 @@ function autoResizeTextarea() {
 function useSuggestion(element) {
   const text = element.textContent.trim();
   queryInput.value = text;
+  updatePromptControls();
   sendQuery(text);
 }
 
@@ -1209,36 +1419,19 @@ queryInput.addEventListener('keydown', (e) => {
   }
 });
 
-queryInput.addEventListener('input', autoResizeTextarea);
+queryInput.addEventListener('input', () => {
+  autoResizeTextarea();
+  updatePromptControls();
+});
+
+if (clearPromptBtn) {
+  clearPromptBtn.addEventListener('click', clearPromptInput);
+}
 
 clearChatBtn.addEventListener('click', () => {
-  conversationHistory = [];
-  chatMessages.innerHTML = '';
-  const welcome = document.createElement('div');
-  welcome.className = 'welcome-screen';
-  welcome.id = 'welcome-screen';
-  welcome.innerHTML = `
-    <span class="welcome-icon">RA</span>
-    <h2>Research Assistant</h2>
-     <p>A multi-agent research workspace powered by pluggable LLM and embedding providers.
-       Ingest your sources, ask deep questions, and get transparent answers with citations.</p>
-    <div class="suggestions">
-      <button class="suggestion-chip" onclick="useSuggestion(this)">
-        What are the key findings on attention mechanisms?
-      </button>
-      <button class="suggestion-chip" onclick="useSuggestion(this)">
-        Summarize the main contributions of this paper
-      </button>
-      <button class="suggestion-chip" onclick="useSuggestion(this)">
-        Compare transformer and RNN architectures
-      </button>
-      <button class="suggestion-chip" onclick="useSuggestion(this)">
-        Write research notes on self-supervised learning
-      </button>
-    </div>
-  `;
-  chatMessages.appendChild(welcome);
-  showToast('Chat cleared', 'info');
+  renderDemoConversation();
+  clearPromptInput();
+  showToast('Demo restored', 'info');
 });
 
 function openSettingsModal() {
@@ -1463,6 +1656,7 @@ if (resizeHandle) {
 fetchStats();
 fetchDocuments();
 
+renderDemoConversation();
 queryInput.focus();
 
 console.log('Research Assistant loaded');
