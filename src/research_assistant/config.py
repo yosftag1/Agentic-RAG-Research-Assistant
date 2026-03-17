@@ -8,6 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 from functools import lru_cache
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -22,7 +23,7 @@ class Settings(BaseSettings):
 
     llm_provider: str = "gemini"
     embedding_provider: str = "gemini"
-    google_api_key: str = ""
+    google_api_key: str = Field(default="", validation_alias=AliasChoices("GOOGLE_API_KEY", "GEMINI_API_KEY"))
     openai_api_key: str = ""
     
     llm_model: str = "gemini-2.0-flash"
@@ -52,6 +53,13 @@ class Settings(BaseSettings):
     @property
     def data_path(self) -> Path:
         return Path(self.document_dir)
+
+    def model_post_init(self, __context) -> None:
+        # Render env values are sometimes pasted with quotes/spaces/newlines.
+        self.google_api_key = self.google_api_key.strip().strip('"').strip("'")
+        self.openai_api_key = self.openai_api_key.strip().strip('"').strip("'")
+        self.llm_provider = self.llm_provider.strip().lower()
+        self.embedding_provider = self.embedding_provider.strip().lower()
 
 
 @lru_cache

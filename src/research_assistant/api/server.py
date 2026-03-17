@@ -73,7 +73,8 @@ def _provider_auth_detail(err: str) -> dict | None:
             "type": "provider_auth_error",
             "message": (
                 "Google API key is invalid for the selected Gemini provider. "
-                "Set a valid GOOGLE_API_KEY in Render environment variables, then redeploy."
+                "Set a valid GOOGLE_API_KEY (or GEMINI_API_KEY) in Render environment variables, "
+                "ensure no extra quotes/spaces, then redeploy."
             ),
             "raw": err,
         }
