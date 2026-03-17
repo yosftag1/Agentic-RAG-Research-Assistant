@@ -34,7 +34,8 @@ app.add_middleware(
 
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
-app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 class QueryRequest(BaseModel):
     question: str
@@ -149,6 +150,11 @@ class WebSearchResponse(BaseModel):
 async def serve_frontend():
     """Serve the main web application."""
     index_path = STATIC_DIR / "index.html"
+    if not index_path.exists():
+        return HTMLResponse(
+            content="Research Assistant API is running. Frontend assets are not bundled in this deploy.",
+            status_code=200,
+        )
     return HTMLResponse(content=index_path.read_text(), status_code=200)
 
 @app.post("/query", response_model=QueryResponse)
