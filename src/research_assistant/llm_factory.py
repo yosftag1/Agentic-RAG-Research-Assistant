@@ -76,7 +76,14 @@ def get_llm(temperature: float = 0.3, **kwargs: Any) -> BaseChatModel:
             **kwargs,
         )
     elif provider == "ollama":
-        from langchain_ollama import ChatOllama
+        try:
+            from langchain_ollama import ChatOllama
+        except ImportError as exc:
+            raise RuntimeError(
+                "Ollama provider is selected but 'langchain-ollama' is not installed. "
+                "Install dependencies with 'pip install .' (or 'pip install .[ollama]') "
+                "or switch llm_provider to 'gemini'/'openai'."
+            ) from exc
         return ChatOllama(
             model=settings.llm_model or settings.ollama_chat_model,
             base_url=settings.ollama_base_url,
@@ -154,7 +161,14 @@ def get_embeddings() -> Embeddings:
             openai_api_key=settings.openai_api_key,
         )
     elif provider == "ollama":
-        from langchain_ollama import OllamaEmbeddings
+        try:
+            from langchain_ollama import OllamaEmbeddings
+        except ImportError as exc:
+            raise RuntimeError(
+                "Ollama embedding provider is selected but 'langchain-ollama' is not installed. "
+                "Install dependencies with 'pip install .' (or 'pip install .[ollama]') "
+                "or switch embedding_provider to 'gemini'/'openai'."
+            ) from exc
 
         requested_model = settings.embedding_model or settings.ollama_embedding_model
         fallback_models: list[str] = []

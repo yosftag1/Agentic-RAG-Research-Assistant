@@ -65,6 +65,21 @@ def _dimension_mismatch_detail(err: str) -> dict | None:
     return None
 
 
+def _provider_auth_detail(err: str) -> dict | None:
+    """Return a structured error payload for invalid provider credentials."""
+    lower = err.lower()
+    if "api_key_invalid" in lower or "api key not valid" in lower:
+        return {
+            "type": "provider_auth_error",
+            "message": (
+                "Google API key is invalid for the selected Gemini provider. "
+                "Set a valid GOOGLE_API_KEY in Render environment variables, then redeploy."
+            ),
+            "raw": err,
+        }
+    return None
+
+
 class IngestResponse(BaseModel):
     chunks_ingested: int
     message: str
@@ -193,6 +208,9 @@ async def query_endpoint(request: QueryRequest):
                 status_code=409,
                 detail=mismatch,
             )
+        auth_error = _provider_auth_detail(err)
+        if auth_error is not None:
+            raise HTTPException(status_code=401, detail=auth_error)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -226,9 +244,10 @@ async def query_stream_endpoint(request: QueryRequest):
                 })
             except Exception as exc:
                 err = str(exc)
+                auth_error = _provider_auth_detail(err)
                 await queue.put({
                     "type": "error",
-                    "detail": _dimension_mismatch_detail(err) or {"message": err},
+                    "detail": _dimension_mismatch_detail(err) or auth_error or {"message": err},
                 })
             finally:
                 await queue.put({"type": "done"})
