@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="400">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="gradMain" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#b483a7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#9d6c95;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="gradAgent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f6efe6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f0e3d8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="gradDb" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6d9f8c;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#6d9f8c;stop-opacity:0.4" />
+    </linearGradient>
+
+    <!-- Arrowhead -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b483a7" />
+    </marker>
+    <marker id="arrow-db" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6d9f8c" />
+    </marker>
+
+    <!-- Styles -->
+    <style>
+      .text-title { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 700; fill: #3f3350; }
+      .text-subtitle { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 500; fill: #6e627d; }
+      .text-white { font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 700; fill: #ffffff; }
+      .line { stroke: #b483a7; stroke-width: 2; fill: none; marker-end: url(#arrow); }
+      .line-dashed { stroke: #6d9f8c; stroke-width: 2; fill: none; stroke-dasharray: 5,5; marker-end: url(#arrow-db); }
+      .box-agent { fill: url(#gradAgent); stroke: #b483a7; stroke-width: 2; rx: 8; }
+      .box-main { fill: url(#gradMain); stroke: #9d6c95; stroke-width: 2; rx: 8; }
+      .box-db { fill: url(#gradDb); stroke: #6d9f8c; stroke-width: 2; rx: 8; }
+    </style>
+  </defs>
+
+  <!-- Background (Optional, using transparent to adapt to themes) -->
+  <rect width="800" height="400" fill="transparent" />
+
+  <!-- Nodes -->
+  
+  <!-- 1. User Query -->
+  <g transform="translate(40, 160)">
+    <rect width="120" height="60" class="box-main" />
+    <text x="60" y="35" text-anchor="middle" class="text-white">User Query</text>
+  </g>
+
+  <!-- Line: User -> Orchestrator -->
+  <path d="M 160 190 L 220 190" class="line" />
+
+  <!-- 2. Orchestrator -->
+  <g transform="translate(220, 140)">
+    <polygon points="60,0 120,50 60,100 0,50" class="box-agent" />
+    <text x="60" y="45" text-anchor="middle" class="text-title">Orchestrator</text>
+    <text x="60" y="60" text-anchor="middle" class="text-subtitle">(LangGraph)</text>
+  </g>
+
+  <!-- Lines from Orchestrator to Agents -->
+  <path d="M 340 190 L 370 190 L 370 70 L 400 70" class="line" />
+  <path d="M 340 190 L 370 190 L 370 150 L 400 150" class="line" />
+  <path d="M 340 190 L 370 190 L 370 230 L 400 230" class="line" />
+  <path d="M 340 190 L 370 190 L 370 310 L 400 310" class="line" />
+
+  <!-- 3. Agents -->
+  <g transform="translate(400, 40)">
+    <rect width="140" height="60" class="box-agent" />
+    <text x="70" y="30" text-anchor="middle" class="text-title">Retriever</text>
+    <text x="70" y="45" text-anchor="middle" class="text-subtitle">Local + Web</text>
+  </g>
+
+  <g transform="translate(400, 120)">
+    <rect width="140" height="60" class="box-agent" />
+    <text x="70" y="30" text-anchor="middle" class="text-title">Summarizer</text>
+    <text x="70" y="45" text-anchor="middle" class="text-subtitle">Condense Sources</text>
+  </g>
+
+  <g transform="translate(400, 200)">
+    <rect width="140" height="60" class="box-agent" />
+    <text x="70" y="30" text-anchor="middle" class="text-title">Analyst</text>
+    <text x="70" y="45" text-anchor="middle" class="text-subtitle">Compare Evidence</text>
+  </g>
+
+  <g transform="translate(400, 280)">
+    <rect width="140" height="60" class="box-agent" />
+    <text x="70" y="30" text-anchor="middle" class="text-title">Writer</text>
+    <text x="70" y="45" text-anchor="middle" class="text-subtitle">Draft Final</text>
+  </g>
+
+  <!-- External Data Sources (Chroma, Web) -->
+  <g transform="translate(400, -50)">
+    <rect width="60" height="40" class="box-db" />
+    <text x="30" y="24" text-anchor="middle" class="text-title" style="fill:#6d9f8c;">Chroma</text>
+  </g>
+  <g transform="translate(480, -50)">
+    <rect width="60" height="40" class="box-db" rx="20" />
+    <text x="30" y="24" text-anchor="middle" class="text-title" style="fill:#6d9f8c;">Web</text>
+  </g>
+  <!-- Lines from Retriever to DB -->
+  <path d="M 430 40 L 430 -10" class="line-dashed" />
+  <path d="M 510 40 L 510 -10" class="line-dashed" />
+
+
+  <!-- Lines from Agents to Merge -->
+  <path d="M 540 70 L 570 70 L 570 190 L 600 190" class="line" />
+  <path d="M 540 150 L 570 150 L 570 190 L 600 190" class="line" />
+  <path d="M 540 230 L 570 230 L 570 190 L 600 190" class="line" />
+  <path d="M 540 310 L 570 310 L 570 190 L 600 190" class="line" />
+
+  <!-- 4. Merge Node -->
+  <g transform="translate(600, 160)">
+    <circle cx="30" cy="30" r="30" fill="#f0e3d8" stroke="#b483a7" stroke-width="2" />
+    <text x="30" y="35" text-anchor="middle" class="text-title">Merge</text>
+  </g>
+
+  <!-- Line: Merge -> Output -->
+  <path d="M 660 190 L 690 190" class="line" />
+
+  <!-- 5. Output -->
+  <g transform="translate(690, 160)">
+    <rect width="90" height="60" class="box-main" />
+    <text x="45" y="35" text-anchor="middle" class="text-white">Output</text>
+  </g>
+
+</svg>

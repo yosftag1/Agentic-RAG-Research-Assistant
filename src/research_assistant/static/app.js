@@ -1429,9 +1429,10 @@ if (clearPromptBtn) {
 }
 
 clearChatBtn.addEventListener('click', () => {
-  renderDemoConversation();
+  renderWelcomeScreen(false);
+  conversationHistory = [];
   clearPromptInput();
-  showToast('Demo restored', 'info');
+  showToast('Chat cleared', 'info');
 });
 
 function openSettingsModal() {

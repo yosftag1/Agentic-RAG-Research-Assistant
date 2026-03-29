@@ -34,6 +34,6 @@ services:
       - key: LLM_MODEL
         value: "gemini-2.0-flash"
       - key: CHROMA_PERSIST_DIR
-        value: "/var/data/chroma_db"
+        value: "./chroma_db"
       - key: DOC_REGISTRY_PATH
-        value: "/var/data/doc_registry.db"
+        value: "./doc_registry.db"

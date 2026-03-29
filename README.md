@@ -1,16 +1,18 @@
-# 🔬 Personal Research Assistant
+<p align="center">
+  <img src="assets/logo.svg" alt="Research Assistant Logo" width="400">
+</p>
+
+# Personal Research Assistant
 
 > Multi-agent RAG system for personal research — ingest papers, ask questions, get cited answers.
 
-## Architecture
+**[Try the Live Demo](https://agentic-rag-research-assistant.onrender.com/)**
 
-```
-User → Orchestrator → [Retriever] → ChromaDB / Web
-                    → [Summarizer] → LLM
-                    → [Analyst]    → LLM
-                    → [Writer]     → LLM
-                    → Merge → Final Answer
-```
+<p align="center">
+  <img src="assets/agentic-rag-research-assistant.onrender.com_.png" alt="Research Assistant Dashboard" width="800">
+</p>
+
+## Architecture
 
 **5 Agents** working together via LangGraph:
 - **Orchestrator** — classifies intent, routes to agents, merges results
@@ -115,3 +117,4 @@ All settings can be configured via `.env` or environment variables:
 | `RETRIEVAL_TOP_K` | `5` | Results per query |
 | `CHROMA_PERSIST_DIR` | `./chroma_db` | ChromaDB storage path |
 | `DOC_REGISTRY_PATH` | `./doc_registry.db` | Document registry SQLite path |
+
