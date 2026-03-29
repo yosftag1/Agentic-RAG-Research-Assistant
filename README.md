@@ -4,6 +4,8 @@
 
 # Personal Research Assistant
 
+*I built this project to act as a personal tool to help me organize and execute my own small side projects and help with organizing research materials.*
+
 > Multi-agent RAG system for personal research — ingest papers, ask questions, get cited answers.
 
 **[Try the Live Demo](https://agentic-rag-research-assistant.onrender.com/)**
@@ -118,3 +120,15 @@ All settings can be configured via `.env` or environment variables:
 | `CHROMA_PERSIST_DIR` | `./chroma_db` | ChromaDB storage path |
 | `DOC_REGISTRY_PATH` | `./doc_registry.db` | Document registry SQLite path |
 
+## Using Local LLMs (Ollama)
+
+If you want to use local models via [Ollama](https://ollama.com/), you can connect the hosted Web App directly to your local machine. The easiest way to do this is by using a tunneling service like [ngrok](https://ngrok.com/).
+
+1. Start your local Ollama server.
+2. Run ngrok to tunnel to the Ollama default port:
+   ```bash
+   ngrok http 11434
+   ```
+3. Copy the ngrok **Forwarding** URL (e.g. `https://xxxx-xxx.ngrok.app`).
+4. In the app's **System Settings**, select "Ollama (Local)" for your LLM and/or Embedding Provider.
+5. Paste the ngrok URL into the **Ollama Base URL** field. This allows the API to securely communicate with your local hardware!
