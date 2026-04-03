@@ -31,24 +31,27 @@
     <header class="header">
       <div class="header-logo">
         <img class="logo-icon" src="./papyrus_2222878.png" alt="Research Assistant logo">
-        <h1>Research Assistant</h1>
+        <div class="header-brand">
+          <span class="header-kicker">Agentic RAG</span>
+          <h1>Research Assistant</h1>
+        </div>
       </div>
 
       <div class="header-actions">
         <button class="btn btn-icon" id="about-toggle" title="About" type="button">
-          <span class="btn-glyph">ℹ️</span>
+          <img class="btn-glyph" src="./column_4424599.png" alt="" aria-hidden="true">
           <span>About</span>
         </button>
         <button class="btn btn-icon" id="web-search-toggle" title="Search Papers" type="button">
-          <span class="btn-glyph">🔎</span>
+          <img class="btn-glyph" src="./atlas_4793147.png" alt="" aria-hidden="true">
           <span>Search</span>
         </button>
         <button class="btn btn-icon" id="settings-toggle" title="Settings" type="button">
-          <span class="btn-glyph">⚙️</span>
+          <img class="btn-glyph" src="./global_9318464.png" alt="" aria-hidden="true">
           <span>Settings</span>
         </button>
         <button class="btn btn-icon" id="clear-chat-btn" title="Clear conversation" type="button">
-          <span class="btn-glyph">🗑️</span>
+          <img class="btn-glyph" src="./bucket_687062.png" alt="" aria-hidden="true">
           <span>Clear</span>
         </button>
       </div>
@@ -79,9 +82,12 @@
         </div>
 
         
-        <div class="sidebar-section">
-          <h3>System Flow</h3>
-          <div class="arch-flow">
+        <div class="sidebar-section sidebar-section-collapsible" id="system-flow-section">
+          <button class="sidebar-section-toggle" id="system-flow-toggle" type="button" aria-expanded="false" aria-controls="system-flow-panel">
+            <h3>System Flow</h3>
+            <span class="sidebar-toggle-indicator" aria-hidden="true">+</span>
+          </button>
+          <div class="arch-flow is-collapsed" id="system-flow-panel">
             <div class="arch-stage arch-user">
               <div class="arch-stage-title">1) Query Intake</div>
               <div class="arch-stage-desc">Understand user intent and preserve conversation context.</div>
@@ -142,27 +148,50 @@
 
           
           <div class="welcome-screen" id="welcome-screen">
-            <img class="welcome-icon" src="./papyrus_2222878.png" alt="Research Assistant logo">
-            <h2>Research Assistant</h2>
-            <p>
-              A multi-agent research workspace powered by pluggable LLM and embedding providers.
-              Ingest your sources, ask deep questions, and get transparent answers with citations.
-            </p>
+            <div class="welcome-shell">
+              <section class="welcome-copy">
+                <span class="welcome-kicker">Personal Research Studio</span>
+                <h2>Ask better questions across your papers, notes, and sources.</h2>
+                <p>
+                  Upload what you are reading, ask what you want to know, and get answers that stay tied to the material you collected.
+                </p>
 
-            
-            <div class="suggestions">
-              <button class="suggestion-chip" onclick="useSuggestion(this)">
-                What are the key findings on attention mechanisms?
-              </button>
-              <button class="suggestion-chip" onclick="useSuggestion(this)">
-                Summarize the main contributions of this paper
-              </button>
-              <button class="suggestion-chip" onclick="useSuggestion(this)">
-                Compare transformer and RNN architectures
-              </button>
-              <button class="suggestion-chip" onclick="useSuggestion(this)">
-                Write research notes on self-supervised learning
-              </button>
+                <div class="welcome-actions">
+                  <button class="welcome-primary-action" onclick="openDemoMode()" type="button">
+                    Open demo
+                  </button>
+                </div>
+
+                <div class="welcome-metrics">
+                  <div class="welcome-metric-card">
+                    <span class="welcome-metric-value">Local-first</span>
+                    <span class="welcome-metric-label">Searches your indexed material before expanding outward.</span>
+                  </div>
+                  <div class="welcome-metric-card">
+                    <span class="welcome-metric-value">Multi-agent</span>
+                    <span class="welcome-metric-label">Retrieval, synthesis, and drafting each have a clear role.</span>
+                  </div>
+                  <div class="welcome-metric-card">
+                    <span class="welcome-metric-value">Cited output</span>
+                    <span class="welcome-metric-label">Answers stay tied back to the evidence you collected.</span>
+                  </div>
+                </div>
+
+                <div class="suggestions">
+                  <button class="suggestion-chip" onclick="useSuggestion(this)">
+                    What are the key findings on attention mechanisms?
+                  </button>
+                  <button class="suggestion-chip" onclick="useSuggestion(this)">
+                    Summarize the main contributions of this paper
+                  </button>
+                  <button class="suggestion-chip" onclick="useSuggestion(this)">
+                    Compare transformer and RNN architectures
+                  </button>
+                  <button class="suggestion-chip" onclick="useSuggestion(this)">
+                    Write research notes on self-supervised learning
+                  </button>
+                </div>
+              </section>
             </div>
           </div>
 
@@ -174,7 +203,7 @@
             
             <textarea 
               id="query-input"
-              placeholder="Ask a research question..."
+              placeholder="Ask a question, compare sources, or draft research notes..."
               rows="1"
               autofocus
             ></textarea>
@@ -187,7 +216,7 @@
             </button>
           </div>
           <div class="input-hint input-hint-row">
-            <span>Press Enter to send · Shift+Enter for new line</span>
+            <span>Enter sends. Shift+Enter adds a new line.</span>
             <label class="source-pref-inline" for="source-preference">
               Source Preference:
               <select id="source-preference" class="settings-select source-pref-select">
