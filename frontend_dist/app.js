@@ -10,6 +10,8 @@ const sendBtn        = document.getElementById('send-btn');
 const clearPromptBtn = document.getElementById('clear-prompt-btn');
 const clearChatBtn   = document.getElementById('clear-chat-btn');
 const sidebar        = document.getElementById('sidebar');
+const systemFlowToggle = document.getElementById('system-flow-toggle');
+const systemFlowPanel = document.getElementById('system-flow-panel');
 const uploadArea     = document.getElementById('upload-area');
 const fileInput      = document.getElementById('file-input');
 const docList        = document.getElementById('doc-list');
@@ -60,6 +62,12 @@ let webSearchSortMode = 'citations';
 let conversationHistory = [];
 
 const chatWebSearchResultsMap = {};
+
+function setSystemFlowCollapsed(collapsed) {
+  if (!systemFlowToggle || !systemFlowPanel) return;
+  systemFlowToggle.setAttribute('aria-expanded', String(!collapsed));
+  systemFlowPanel.classList.toggle('is-collapsed', collapsed);
+}
 
 
 
@@ -125,6 +133,32 @@ function getSuggestionChipsHtml() {
   `;
 }
 
+function getWelcomeActionsHtml() {
+  return `
+    <div class="welcome-actions">
+      <button class="welcome-primary-action" type="button" onclick="openDemoMode()">Open demo</button>
+    </div>
+  `;
+}
+
+function getWelcomeMetricsHtml() {
+  return `
+    <div class="welcome-metrics">
+      <div class="welcome-metric-card">
+        <span class="welcome-metric-value">Local-first</span>
+        <span class="welcome-metric-label">Searches your indexed material before expanding outward.</span>
+      </div>
+      <div class="welcome-metric-card">
+        <span class="welcome-metric-value">Multi-agent</span>
+        <span class="welcome-metric-label">Retrieval, synthesis, and drafting each have a clear role.</span>
+      </div>
+      <div class="welcome-metric-card">
+        <span class="welcome-metric-value">Cited output</span>
+        <span class="welcome-metric-label">Answers stay tied back to the evidence you collected.</span>
+      </div>
+    </div>
+  `;
+}
 
 function getDemoSourcesHtml(sources) {
   const listItems = sources.map((source, index) => {
@@ -153,12 +187,18 @@ function getDemoSourcesHtml(sources) {
 function getWelcomeScreenHtml(showDemo = true) {
   if (!showDemo) {
     return `
-      <img class="welcome-icon" src="./papyrus_2222878.png" alt="Research Assistant logo">
-      <h2>Research Assistant</h2>
-      <p>
-        Ingest your own PDFs, notes, or web material, then ask questions and get cited answers from the multi-agent workflow.
-      </p>
-      ${getSuggestionChipsHtml()}
+      <div class="welcome-shell">
+        <section class="welcome-copy">
+          <span class="welcome-kicker">Personal Research Studio</span>
+          <h2>Ask better questions across your papers, notes, and sources.</h2>
+          <p>
+            Upload what you are reading, ask what you want to know, and get answers that stay tied to the material you collected.
+          </p>
+          ${getWelcomeActionsHtml()}
+          ${getWelcomeMetricsHtml()}
+          ${getSuggestionChipsHtml()}
+        </section>
+      </div>
     `;
   }
 
@@ -171,38 +211,44 @@ function getWelcomeScreenHtml(showDemo = true) {
   `).join('');
 
   return `
-    <img class="welcome-icon" src="./papyrus_2222878.png" alt="Research Assistant logo">
-    <h2>Research Assistant</h2>
-    <p>
-      Demo mode shows what the system looks like after source material has been indexed and a cited answer has already been produced.
-    </p>
-    <div class="welcome-demo-panel">
-      <div class="welcome-demo-header">
-        <span class="welcome-demo-tag">Demo Mode</span>
-        <div class="welcome-demo-actions">
-          <button class="welcome-demo-action" type="button" onclick="setDemoPrompt()">Use in composer</button>
-          <button class="welcome-demo-action" type="button" onclick="clearDemoMode()">Clear demo</button>
-        </div>
-      </div>
-      <div class="welcome-demo-section-label">Example Indexed Materials</div>
-      <div class="welcome-demo-materials">${materialCards}</div>
-      <div class="welcome-demo-chat">
-        <div class="message user-message welcome-demo-message">
-          <div class="message-avatar">You</div>
-          <div class="message-content">
-            <div class="message-bubble">${escapeHtml(DEMO_PROMPT)}</div>
+    <div class="welcome-shell">
+      <section class="welcome-copy">
+        <span class="welcome-kicker">Personal Research Studio</span>
+        <h2>Ask better questions across your papers, notes, and sources.</h2>
+        <p>
+          Upload what you are reading, ask what you want to know, and get answers that stay tied to the material you collected.
+        </p>
+        ${getWelcomeMetricsHtml()}
+        ${getSuggestionChipsHtml()}
+      </section>
+      <section class="welcome-side">
+        <div class="welcome-demo-panel">
+          <div class="welcome-demo-header">
+            <span class="welcome-demo-tag">Demo Mode</span>
+            <div class="welcome-demo-actions">
+              <button class="welcome-demo-action" type="button" onclick="clearDemoMode()">Clear demo</button>
+            </div>
+          </div>
+          <div class="welcome-demo-section-label">Example Indexed Materials</div>
+          <div class="welcome-demo-materials">${materialCards}</div>
+          <div class="welcome-demo-chat">
+            <div class="message user-message welcome-demo-message">
+              <div class="message-avatar">You</div>
+              <div class="message-content">
+                <div class="message-bubble">${escapeHtml(DEMO_PROMPT)}</div>
+              </div>
+            </div>
+            <div class="message assistant-message welcome-demo-message">
+              <div class="message-avatar">RA</div>
+              <div class="message-content">
+                <div class="message-bubble">${renderMarkdown(DEMO_ANSWER_MARKDOWN)}</div>
+                ${getDemoSourcesHtml(DEMO_SOURCES)}
+              </div>
+            </div>
           </div>
         </div>
-        <div class="message assistant-message welcome-demo-message">
-          <div class="message-avatar">RA</div>
-          <div class="message-content">
-            <div class="message-bubble">${renderMarkdown(DEMO_ANSWER_MARKDOWN)}</div>
-            ${getDemoSourcesHtml(DEMO_SOURCES)}
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
-    ${getSuggestionChipsHtml()}
   `;
 }
 
@@ -546,7 +592,14 @@ function clearDemoMode() {
   clearPromptInput();
 }
 
+function openDemoMode() {
+  renderWelcomeScreen(true);
+  conversationHistory = [];
+  clearPromptInput();
+}
+
 window.clearDemoMode = clearDemoMode;
+window.openDemoMode = openDemoMode;
 
 
 function clearPromptInput() {
@@ -1431,6 +1484,13 @@ if (clearPromptBtn) {
   clearPromptBtn.addEventListener('click', clearPromptInput);
 }
 
+if (systemFlowToggle) {
+  setSystemFlowCollapsed(true);
+  systemFlowToggle.addEventListener('click', () => {
+    setSystemFlowCollapsed(!systemFlowPanel.classList.contains('is-collapsed'));
+  });
+}
+
 clearChatBtn.addEventListener('click', () => {
   renderWelcomeScreen(false);
   conversationHistory = [];
@@ -1660,7 +1720,7 @@ if (resizeHandle) {
 fetchStats();
 fetchDocuments();
 
-renderDemoConversation();
+renderWelcomeScreen(false);
 queryInput.focus();
 
 console.log('Research Assistant loaded');
