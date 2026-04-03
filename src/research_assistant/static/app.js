@@ -64,7 +64,10 @@ const chatWebSearchResultsMap = {};
 
 
 
-const API_BASE = '';  // Empty = same origin (works both locally and deployed)
+const rawApiBase = String(window.__API_BASE_URL__ || '').trim();
+const API_BASE = rawApiBase && !rawApiBase.startsWith('${')
+  ? rawApiBase.replace(/\/+$/, '')
+  : '';
 
 const DEMO_PROMPT = 'Using the indexed papers, when should I choose a transformer over an RNN for sequence modeling, and what trade-offs do the sources highlight?';
 

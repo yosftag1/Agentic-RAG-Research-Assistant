@@ -14,18 +14,12 @@
 # ═══════════════════════════════════════════════════════════════════
 
 services:
-  - type: web                              # This is a web service (has a URL)
-    name: research-assistant               # Name shown in Render dashboard
-    runtime: python                        # Use Python runtime
-    plan: free                             # Free tier!
-    
-    # Build command — runs once during deployment
+  - type: web
+    name: research-assistant-api
+    runtime: python
+    plan: free
     buildCommand: pip install .
-    
-    # Start command — runs the server
     startCommand: uvicorn research_assistant.api.server:app --host 0.0.0.0 --port $PORT
-    
-    # Environment variables — set these in Render dashboard too
     envVars:
       - key: GOOGLE_API_KEY
         sync: false
@@ -37,3 +31,15 @@ services:
         value: "./chroma_db"
       - key: DOC_REGISTRY_PATH
         value: "./doc_registry.db"
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
+  - type: web
+    name: research-assistant-frontend
+    runtime: static
+    plan: free
+    buildCommand: ./scripts/build_frontend.sh
+    staticPublishPath: frontend_dist
+    envVars:
+      - key: API_BASE_URL
+        sync: false

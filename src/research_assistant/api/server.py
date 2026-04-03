@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-from pathlib import Path
+import os
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from research_assistant.config import get_settings
@@ -24,18 +23,29 @@ app = FastAPI(
     version="0.1.0",
 )
 
+
+def _parse_allowed_origins() -> list[str]:
+    """Parse CORS origins from env var for split frontend/backend deploys.
+
+    Set CORS_ALLOWED_ORIGINS as a comma-separated list of origins.
+    Example: https://my-frontend.onrender.com,https://mydomain.com
+    """
+    raw = os.getenv("CORS_ALLOWED_ORIGINS", "*").strip()
+    if raw == "*":
+        return ["*"]
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
+
+
+_ALLOWED_ORIGINS = _parse_allowed_origins()
+_ALLOW_CREDENTIALS = _ALLOWED_ORIGINS != ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_credentials=_ALLOW_CREDENTIALS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-STATIC_DIR = Path(__file__).parent.parent / "static"
-
-if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 class QueryRequest(BaseModel):
     question: str
@@ -162,16 +172,14 @@ class WebSearchResponse(BaseModel):
     results: list[dict]
     error: str | None = None
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_frontend():
-    """Serve the main web application."""
-    index_path = STATIC_DIR / "index.html"
-    if not index_path.exists():
-        return HTMLResponse(
-            content="Research Assistant API is running. Frontend assets are not bundled in this deploy.",
-            status_code=200,
-        )
-    return HTMLResponse(content=index_path.read_text(), status_code=200)
+@app.get("/")
+async def api_root():
+    """Root endpoint for backend-only deployments."""
+    return {
+        "name": "Research Assistant API",
+        "status": "ok",
+        "docs": "/docs",
+    }
 
 @app.post("/query", response_model=QueryResponse)
 async def query_endpoint(request: QueryRequest):
